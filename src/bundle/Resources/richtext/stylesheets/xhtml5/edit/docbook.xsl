@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-    xmlns:ezxhtml5="http://ibexa.co/namespaces/ezpublish5/xhtml5/edit"
-    xmlns:ezxhtml="http://ibexa.co/xmlns/dxp/docbook/xhtml"
-    xmlns:xlink="http://www.w3.org/1999/xlink"
-    xmlns="http://docbook.org/ns/docbook"
-    exclude-result-prefixes="ezxhtml5"
-    version="1.0">
+        xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+        xmlns:ezxhtml5="http://ibexa.co/namespaces/ezpublish5/xhtml5/edit"
+        xmlns:ezxhtml="http://ibexa.co/xmlns/dxp/docbook/xhtml"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns="http://docbook.org/ns/docbook"
+        exclude-result-prefixes="ezxhtml5"
+        version="1.0">
   <xsl:output indent="yes" encoding="UTF-8"/>
 
-    <!--
-    Moved here because it's not processed anymore after this commit,
-    todo - find solution without a whole override
-    https://github.com/ezsystems/ezplatform-richtext/commit/dd2a0c9018f9812689a4b1ac08ce6ffb07e57f85
-    -->
-    <xsl:template match="ezxhtml5:span[@data-ezattribute-widget='content-variable']">
-        <xsl:element name="eztemplateinline" namespace="http://docbook.org/ns/docbook">
-            <xsl:attribute name="name">
-                <xsl:value-of select="'content-variable'"/>
-            </xsl:attribute>
-            <xsl:call-template name="ezattribute"/>
-            <xsl:element name="ezcontent" namespace="http://docbook.org/ns/docbook">
-                <xsl:value-of select="concat('#', ./@data-ezattribute-identifier, '#')" />
-            </xsl:element>
-        </xsl:element>
-    </xsl:template>
+  <!--
+  Moved here because it's not processed anymore after this commit,
+  todo - find solution without a whole override
+  https://github.com/ezsystems/ezplatform-richtext/commit/dd2a0c9018f9812689a4b1ac08ce6ffb07e57f85
+  -->
+  <xsl:template match="ezxhtml5:span[@data-ezattribute-widget='content-variable']">
+    <xsl:element name="eztemplateinline" namespace="http://docbook.org/ns/docbook">
+      <xsl:attribute name="name">
+        <xsl:value-of select="'content-variable'"/>
+      </xsl:attribute>
+      <xsl:call-template name="ezattribute"/>
+      <xsl:element name="ezcontent" namespace="http://docbook.org/ns/docbook">
+        <xsl:value-of select="concat('#', ./@data-ezattribute-identifier, '#')" />
+      </xsl:element>
+    </xsl:element>
+  </xsl:template>
 
   <xsl:template match="/ezxhtml5:section">
     <section xmlns="http://docbook.org/ns/docbook"
@@ -79,6 +79,29 @@
     </xsl:choose>
   </xsl:template>
 
+  <xsl:template name="breaklineWithLiterallayout">
+    <xsl:param name="node"/>
+    <xsl:choose>
+      <xsl:when test="descendant::ezxhtml5:br">
+        <literallayout class="normal">
+          <xsl:for-each select="$node">
+            <xsl:choose>
+              <xsl:when test="local-name( current() ) = 'br'">
+                <xsl:text>&#xA;</xsl:text>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:apply-templates select="current()"/>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:for-each>
+        </literallayout>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:apply-templates/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
   <xsl:template match="ezxhtml5:p" name="paragraph">
     <para>
       <xsl:if test="@id">
@@ -105,25 +128,9 @@
         </xsl:if>
       </xsl:if>
       <xsl:call-template name="ezattribute"/>
-      <xsl:choose>
-          <xsl:when test="descendant::ezxhtml5:br">
-              <literallayout class="normal">
-                  <xsl:for-each select="node()">
-                      <xsl:choose>
-                          <xsl:when test="local-name( current() ) = 'br'">
-                              <xsl:text>&#xA;</xsl:text>
-                          </xsl:when>
-                          <xsl:otherwise>
-                              <xsl:apply-templates select="current()"/>
-                          </xsl:otherwise>
-                      </xsl:choose>
-                  </xsl:for-each>
-              </literallayout>
-          </xsl:when>
-          <xsl:otherwise>
-              <xsl:apply-templates/>
-          </xsl:otherwise>
-      </xsl:choose>
+      <xsl:call-template name="breaklineWithLiterallayout">
+        <xsl:with-param name="node" select="node()"/>
+      </xsl:call-template>
     </para>
   </xsl:template>
 
@@ -272,7 +279,6 @@
       <xsl:call-template name="breakline">
         <xsl:with-param name="node" select="node()"/>
       </xsl:call-template>
-      <xsl:apply-templates/>
     </link>
   </xsl:template>
 
@@ -337,7 +343,9 @@
         </xsl:if>
       </xsl:if>
       <xsl:call-template name="ezattribute"/>
-      <xsl:apply-templates/>
+      <xsl:call-template name="breaklineWithLiterallayout">
+        <xsl:with-param name="node" select="node()"/>
+      </xsl:call-template>
     </title>
   </xsl:template>
 
@@ -457,8 +465,10 @@
           <xsl:value-of select="@title"/>
         </xsl:attribute>
       </xsl:if>
-            <xsl:if test="(@border != '') or (contains( @style, 'border:' ))">
-                <xsl:attribute name="border">1</xsl:attribute>
+      <xsl:if test="@border">
+        <xsl:attribute name="border">
+          <xsl:value-of select="@border"/>
+        </xsl:attribute>
       </xsl:if>
       <xsl:if test="contains( @style, 'border-width:' )">
         <xsl:variable name="borderWidth">
@@ -745,6 +755,24 @@
         <xsl:attribute name="ezxhtml:class">
           <xsl:value-of select="@class"/>
         </xsl:attribute>
+      </xsl:if>
+      <xsl:if test="@id">
+        <xsl:attribute name="xml:id">
+          <xsl:value-of select="@id"/>
+        </xsl:attribute>
+      </xsl:if>
+      <xsl:if test="contains( @style, 'text-align:' )">
+        <xsl:variable name="textAlign">
+          <xsl:call-template name="extractStyleValue">
+            <xsl:with-param name="style" select="@style"/>
+            <xsl:with-param name="property" select="'text-align'"/>
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:if test="$textAlign != ''">
+          <xsl:attribute name="ezxhtml:align">
+            <xsl:value-of select="$textAlign"/>
+          </xsl:attribute>
+        </xsl:if>
       </xsl:if>
       <xsl:if test="@data-ezalign">
         <xsl:attribute name="ezxhtml:align">

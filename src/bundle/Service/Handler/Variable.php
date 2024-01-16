@@ -74,11 +74,7 @@ class Variable extends Handler
         if ($placeholder === null) {
             return;
         }
-        $criterion = new Criterion\CustomField(
-            'meta_content__text_t',
-            Criterion\Operator::CONTAINS,
-            "{$placeholder}"
-        );
+        $criterion = new FullText($placeholder);
         $query = new LocationQuery(['query' => $criterion, 'limit' => 0]);
         $results = $this->searchService->findContentInfo($query);
 
@@ -89,7 +85,7 @@ class Variable extends Handler
     {
         $linkedContent = [];
 
-        $placeholder = $variable->getPlaceholder();
+        $placeholder = $variable->getXmlPlaceholder();
         if ($placeholder === null) {
             return $linkedContent;
         }

@@ -17,7 +17,8 @@ use function count;
 class ContentVariablesOutputFilter implements EventSubscriberInterface
 {
     final public const WRAPPER = '#';
-
+    const XML_WRAPPER = '<ezvalue key="variable">';
+    const END_XML_WRAPPER = '</ezvalue>';
     /** @var Variable */
     protected $variableHandler;
 

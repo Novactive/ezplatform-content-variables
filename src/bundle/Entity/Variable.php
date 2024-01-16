@@ -178,6 +178,15 @@ class Variable extends Entity
 
         return ContentVariablesOutputFilter::WRAPPER . $identifier . ContentVariablesOutputFilter::WRAPPER;
     }
+    public function getXmlPlaceholder(): ?string
+    {
+        $identifier = $this->getIdentifier();
+        if (!$identifier) {
+            return null;
+        }
+
+        return ContentVariablesOutputFilter::XML_WRAPPER . $identifier . ContentVariablesOutputFilter::END_XML_WRAPPER;
+    }
 
     public function setStaticValuePlaceholder(): void
     {
